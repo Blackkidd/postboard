@@ -1,0 +1,21 @@
+User:
+	-register
+	-login
+	-post
+	-comment
+	-delete
+	-edit
+Admin:
+	-dashboard
+	-CRUD user account
+	
+
+Website Application > font(web page):react 
+					> back(api, server):nodejs
+					> database:mongoDB
+						USER:	username(email)
+								password(decode)
+								firstname
+								lastname
+								tel
+								
