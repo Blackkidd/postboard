@@ -76,7 +76,7 @@ router.post("/login", async (req, res) => {
         message: "password invalid" 
     });
   }
-  if (validPassword == true && validUsername == true) {
+  if (validUsername && validPassword == true) {
     let payload = { _id: validUsername._id, per_mis:"user" };
     const accToken = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET);
     const refToken = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET_LIFE, {
