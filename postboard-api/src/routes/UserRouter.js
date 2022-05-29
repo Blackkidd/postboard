@@ -1,103 +1,102 @@
-const router = require('express').Router()
-const mongoose = require('mongoose')
-const User = require('../Models/User')
-const jwt = require('jsonwebtoken')
-const bcrypt = require('bcryptjs')
+const router = require("express").Router();
+const mongoose = require("mongoose");
+const User = require("../Models/User");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
+require("dotenv/config")
 
+// User Register API
+router.post("/register", async (req, res) => {
+  const { username, password, firstname, lastname, phoneNum } = req.body;
 
-// User Register and Auto Login API
-router.post('/register', async (req, res) => {
-    const {
+  //Hash password
+  const salt = await bcrypt.genSalt(12);
+  const hashedpassword = await bcrypt.hash(password, salt);
+
+  // Check username
+  const checkUser = await User.findOne({ username: username });
+  if (checkUser) {
+    return res.status(400).json({
+      error: username + " is not already",
+    });
+  }
+
+  // Check lenght of username and password
+  if (username.length < 8 || password.length < 8) {
+    return res.status(422).json({
+      error: "username and password must be 8 character",
+    });
+  }
+
+  if (!username || !password || !firstname || !lastname || !phoneNum) {
+    return res.status(422).json({
+      error: "Please complete the information",
+    });
+  }
+
+  // Add USER to database
+  const user = new User({
+    username: username,
+    password: hashedpassword,
+    firstname: firstname,
+    lastname: lastname,
+    phoneNum: phoneNum,
+  });
+  await user
+    .save()
+    .then((saveDocument) => {
+      saveDocument === user;
+      console.log(saveDocument);
+      res.status(200).json({
+        message: "register success",
         username,
         password,
         firstname,
         lastname,
-        phoneNuber,
-    } = req.body
-
-    // hash password 
-    const salt = await bcrypt.genSalt(10)
-    const hashedPassword = await bcrypt.hash(password, salt)
-
-    //Check username 
-    const checkUsername = await User.findOne({
-        username: username
+      });
     })
-    if (!username || !password) {
-        return res
-            .status(400)
-            .json({
-                message: "please complete information!"
-            })
-    } else {
-        if (checkUsername) {
-            return res
-                .status(400)
-                .json({
-                    message: username + "already exists"
-                })
-        }
-        if (username.length < 8 || password.length < 8) {
-            return res
-                .status(422)
-                .json({
-                    message: "username and password must be 8 characters"
-                })
-        }
-    }
-
-    const user = new User({
-        username: username,
-        password: hashedPassword,
-        firstname: firstname,
-        lastname: lastname,
-        phoneNuber: phoneNuber
-    })
-    try {
-        const insertUsertoDatabase = user.save()
-            .then(async(result) => {
-                const validUsername = await User.findOne({ username: username })
-                const validPassword = await bcrypt.compare(password, validUsername.password)
-                if (!validUsername || !validPassword) {
-                    return res
-                        .status(400)
-                        .json({
-                            message: "username or password is invalid"
-                        })
-                }
-                if(validUsername && validPassword){
-                    let payload = {_id: validUsername._id, per_mis:"user"}
-                    const accToken = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET)
-                    const refToken = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET_LIFT,
-                        {
-                            algorithm:"HS2565",
-                            expiresIn: 300,
-                        })
-                    res.json({
-                        AccessToken: accToken,
-                        RefreshToken: refToken,
-                        message: "register and login success",
-                        username: username,
-                    })
-                }
-                else{
-                    return res
-                        .status(422)
-                        .json({
-                            error:"เกิดข้อผิดพลาด"
-                        })
-                }
-            })
-            .catch((err) =>{
-                console.log(err)
-                res.status(400).json({
-                    error: error
-                })
-            })
-    }catch(err){
-        console.log("error register", err)
-        res.status(400).json(err)
-    }
+    .catch((error) => {
+      console.log(error);
+    });
 });
 
-module.exports = router
+// User Login API
+router.post("/login", async (req, res) => {
+  const { username, password } = req.body;
+
+  const validUsername = await User.findOne({ username: username });
+  if (!validUsername) {
+    return res.status(400).json({ 
+        message: "username invalid" 
+    });
+  }
+  const validPassword = await bcrypt.compare(password, validUsername.password);
+  if (!validPassword) {
+    return res.status(400).json({ 
+        message: "password invalid" 
+    });
+  }
+  if (validPassword == true && validUsername == true) {
+    let payload = { _id: validUsername._id, per_mis:"user" };
+    const accToken = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET);
+    const refToken = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET_LIFE, {
+      algorithm: "HS256",
+      expiresIn: 300,
+    });
+    console.log(username + " login");
+    console.log(accToken, refToken)
+    res.status(200).json({
+      AccessToken: accToken,
+      RefreshToken: refToken,
+      message: "login success",
+      username: username,
+    });
+  } else {
+    console.log("login fail");
+    res.status(422).json({
+      message: "login fail",
+    });
+  }
+});
+
+module.exports = router;

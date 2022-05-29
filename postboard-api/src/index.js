@@ -11,7 +11,6 @@ const UserRouter = require('./routes/UserRouter')
 
 app.use(cors())
 app.use(express.json())
-
 app.use(UserRouter)
 
 app.get("/", (req, res)=>{
@@ -19,13 +18,19 @@ app.get("/", (req, res)=>{
 })
 
 //Connect to database(mongodb)
-mongoose.connect(
-    process.env.DB_CONNECTION
-)
-
-
-// Server Start PORT 5000
-app.listen(5000, ()=>{
-    console.log("server is running")
+mongoose.connect(process.env.DB_CONNECTION,{
+    useNewUrlParser:true,
+    useUnifiedTopology:true
+})
+mongoose.connection.on('connected', ()=>{
+    console.log("connect database success")
 })
 
+mongoose.connection.on('error', (error)=>{
+    console.log("connect database fail")
+})
+
+// Server Start PORT 5000
+app.listen(PORT, ()=>{
+    console.log("server is running in port",PORT)
+})
