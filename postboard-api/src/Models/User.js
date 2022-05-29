@@ -6,15 +6,6 @@ const UserSchema = mongoose.Schema({
     firstname: String,
     lastname: String,
     phoneNum: String,
-    // postdetail:{
-    //     title: String,
-    //     detail: String,
-    //     comment: String,
-    //     date:{
-    //         type: Date, 
-    //         default: Date.now
-    //     }
-    // }
 }) 
 
 module.exports = mongoose.model('User', UserSchema)
